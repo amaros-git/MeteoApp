@@ -9,7 +9,6 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.content.res.Resources
 import android.location.Location
-import android.location.LocationListener
 import android.location.LocationManager
 import android.net.Uri
 import android.os.Build
@@ -17,117 +16,80 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.*
+import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
+import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
-import com.google.android.gms.maps.CameraUpdateFactory
+import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
+import dagger.hilt.android.AndroidEntryPoint
+import lv.maros.meteoapp.databinding.FragmentMapBinding
+import timber.log.Timber
 import java.util.*
+import javax.inject.Inject
 
+@AndroidEntryPoint
+class MapFragment : Fragment(), OnMapReadyCallback {
 
-class SelectLocationFragment : BaseFragment(), OnMapReadyCallback, LocationListener {
+    @Inject
+    lateinit var viewModel: MapViewModel
 
-    private val TAG = SelectLocationFragment::class.java.simpleName
+    private lateinit var binding: FragmentMapBinding
 
     private lateinit var map: GoogleMap
 
-    private lateinit var locationManager: LocationManager
+    //private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
-    private var selectedLocationLatLng: LatLng? = null
-    private var selectedLocationName = "Location"
-
-    private var currentMarker: Marker? = null
-
-    override val _viewModel: SaveReminderViewModel by inject()
-
-    private lateinit var binding: FragmentSelectLocationBinding
-
-    private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
-
-    //When navigate back showing Snackbar with an action, on the different screen app crashes
-    //with "not attached to Activity". Thus I will remove Snackbar once this Fragment is destroyed
-    private var snackBarGoToSettings: Snackbar? = null
-
-    @SuppressLint("NewApi")
-    private val startForForegroundLocationPermissionResult = registerForActivityResult(
+    private val startForLocationPermissionResult = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { result ->
-        Log.d(TAG, "foreground permission result = $result")
-        if (result) { //check if background permissions are provided
-            if ((runningQOrLater) && (!isBackgroundLocationPermissionAllowed())) {
-                requestBackGroundLocationPermission()
-            }
-            enableMyLocation()
+        Timber.d("permission result = $result")
+        if (result) {
+            //getMyLocation()
         } else {
-            snackBarGoToSettings = showToastWithSettingsAction(
-                binding.root,
-                R.string.location_required_error
-            ).apply {
-                show()
-            }
+            showToastWithExplanation()
         }
     }
 
-    private val startForBackgroundLocationPermissionResult = registerForActivityResult(
-        ActivityResultContracts.RequestPermission()
-    ) { result ->
-        Log.d(TAG, "background permission result = $result")
-        if (!result) {
-            snackBarGoToSettings = showToastWithSettingsAction(
-                binding.root,
-                R.string.background_permission_denied_explanation
-            ).apply {
-                show()
-            }
-        }
-    }
-
-
-    @SuppressLint("NewApi")
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
-        binding =
-            DataBindingUtil.inflate(inflater, R.layout.fragment_select_location, container, false)
+        binding = FragmentMapBinding.inflate(inflater)
 
-        binding.viewModel = _viewModel
+        binding.viewModel = viewModel
         binding.lifecycleOwner = this
 
-        locationManager =
-            requireActivity().getSystemService(Context.LOCATION_SERVICE) as LocationManager
-
-        setHasOptionsMenu(true)
-        setDisplayHomeAsUpEnabled(true)
+        //setHasOptionsMenu(true)
 
         val mapFragment = childFragmentManager.findFragmentById(R.id.map) as SupportMapFragment
         mapFragment.getMapAsync(this)
 
-        binding.saveLocationButton.setOnClickListener {
-            if (null == selectedLocationLatLng) {
-                _viewModel.showToast.value = getString(R.string.please_select_location)
-            } else {
-                onLocationSelected(selectedLocationLatLng!!)
-            }
-        }
-
         return binding.root
     }
 
-    @SuppressLint("NewApi")
     override fun onStart() {
         super.onStart()
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        locationManager.removeUpdates(this)
+    private fun showToastWithExplanation() {
 
-        snackBarGoToSettings?.dismiss()
+        Snackbar.make(
+            binding.root,
+            requireContext().getString(R.string.restore_reminder),
+            Snackbar.LENGTH_LONG
+        ).apply
+        {
+            setAction(R.string.undo) {
+                restoreDeletedReminder(reminder)
+            }
+
+            show()
+        }
     }
 
     private fun onLocationSelected(location: LatLng) {

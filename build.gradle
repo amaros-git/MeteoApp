@@ -15,6 +15,9 @@ buildscript {
         picasso_version = "2.5.2"
         play_services_location_version = "17.0.0"
         material_version = "1.3.0"
+        hilt_version = '2.32-alpha'
+        timber_version = "4.7.1"
+
     }
 
     repositories {
@@ -26,6 +29,8 @@ buildscript {
         classpath "org.jetbrains.kotlin:kotlin-gradle-plugin:$kotlin_version"
         classpath "org.jetbrains.kotlin:kotlin-serialization:$kotlin_version" //TODO Do I need it ?
         classpath "androidx.navigation:navigation-safe-args-gradle-plugin:$navigation_version"
+        classpath "com.google.dagger:hilt-android-gradle-plugin:$hilt_version"
+
     }
 }
 

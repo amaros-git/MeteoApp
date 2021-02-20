@@ -4,6 +4,8 @@ plugins {
     id 'kotlin-kapt'
     id 'androidx.navigation.safeargs.kotlin'
     id 'kotlin-android-extensions'
+    id 'dagger.hilt.android.plugin'
+
 }
 
 android {
@@ -55,6 +57,10 @@ dependencies {
     // For control over item selection of both touch and mouse driven selection
     implementation "androidx.recyclerview:recyclerview-selection:$recyclerview_version"
 
+    // Hilt dependency injector
+    implementation "com.google.dagger:hilt-android:$hilt_version"
+    kapt "com.google.dagger:hilt-compiler:$hilt_version"
+
     // ViewModel and LiveData
     implementation "androidx.lifecycle:lifecycle-extensions:$lifecycle_version"
     implementation "androidx.lifecycle:lifecycle-livedata-ktx:$lifecycle_version"
@@ -86,4 +92,8 @@ dependencies {
 
     // Material
     implementation "com.google.android.material:material:$material_version"
+    implementation 'com.google.android.gms:play-services-maps:17.0.0'
+
+    //Timber
+    implementation "com.jakewharton.timber:timber:$timber_version"
 }
