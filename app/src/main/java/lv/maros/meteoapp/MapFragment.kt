@@ -16,10 +16,12 @@ import android.os.Bundle
 import android.provider.Settings
 import android.util.Log
 import android.view.*
+import android.view.inputmethod.InputMethodManager
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.RequiresApi
 import androidx.core.content.ContentProviderCompat.requireContext
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.checkSelfPermission
 import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
@@ -77,33 +79,18 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun showToastWithExplanation() {
-
         Snackbar.make(
             binding.root,
-            requireContext().getString(R.string.restore_reminder),
+            requireContext().getString(R.string.please_enable_location),
             Snackbar.LENGTH_LONG
-        ).apply
-        {
-            setAction(R.string.undo) {
-                restoreDeletedReminder(reminder)
+        ).apply {
+            setAction(R.string.why) {
             }
-
             show()
         }
     }
 
-    private fun onLocationSelected(location: LatLng) {
-        if (validateSelectedLocation()) {
-            _viewModel.latitude.value = location.latitude
-            _viewModel.longitude.value = location.longitude
-            _viewModel.reminderSelectedLocationStr.value = selectedLocationName
-
-            _viewModel.navigationCommand.value = NavigationCommand.Back
-        }
-
-    }
-
-    override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    /*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
         inflater.inflate(R.menu.map_options, menu)
     }
 
@@ -125,49 +112,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             true
         }
         else -> super.onOptionsItemSelected(item)
-    }
+    }*/
 
-    @SuppressLint("MissingPermission")
-    private fun registerLocationListener() {
-        if (isForegroundLocationPermissionAllowed()) {
-            locationManager.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400, 10f, this)
-        }
-    }
 
-    private fun isForegroundLocationPermissionAllowed(): Boolean =
-        PackageManager.PERMISSION_GRANTED == checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
-        )
 
-    private fun requestForeGroundLocationPermission() {
-        startForForegroundLocationPermissionResult
-            .launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun isBackgroundLocationPermissionAllowed(): Boolean =
-        PackageManager.PERMISSION_GRANTED == checkSelfPermission(
-            requireContext(), Manifest.permission.ACCESS_BACKGROUND_LOCATION
-        )
-
-    @RequiresApi(Build.VERSION_CODES.Q)
-    private fun requestBackGroundLocationPermission() {
-        if (shouldShowRequestPermissionRationale(Manifest.permission.ACCESS_BACKGROUND_LOCATION)) {
-            Log.d(TAG, "shouldShowRequestPermissionRationale")
-            val builder = AlertDialog.Builder(requireContext()).apply {
-                setTitle("This app needs background location access")
-                setMessage("Please grant \"Allow all the time\" location permission so this app can track your reminders and send notifications")
-                setPositiveButton(android.R.string.ok, null)
-                setOnDismissListener {
-                    startForBackgroundLocationPermissionResult
-                        .launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-                }
-            }.show()
-        } else {
-            startForBackgroundLocationPermissionResult
-                .launch(Manifest.permission.ACCESS_BACKGROUND_LOCATION)
-        }
-    }
 
 
     override fun onMapReady(googleMap: GoogleMap) {
@@ -180,23 +128,23 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
         enableMyLocation()
 
-        setMapLongClick(map)
+        /*setMapLongClick(map)
 
         setPoiClick(map)
 
-        setMapStyle(map)
+        setMapStyle(map)*/
     }
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-        if (!isForegroundLocationPermissionAllowed()) {
+        /*if (!isForegroundLocationPermissionAllowed()) {
             requestForeGroundLocationPermission()
             return
         }
         registerLocationListener()
-        map.isMyLocationEnabled = true
+        map.isMyLocationEnabled = true*/
     }
-
+/*
     private fun setPoiClick(map: GoogleMap) {
         map.setOnPoiClickListener { poi ->
             currentMarker?.remove()
@@ -212,9 +160,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             selectedLocationLatLng = poi.latLng
             selectedLocationName = poi.name
         }
-    }
+    }*/
 
-    private fun setMapLongClick(map: GoogleMap) {
+   /* private fun setMapLongClick(map: GoogleMap) {
         map.setOnMapLongClickListener { latLng ->
             currentMarker?.remove()
 
@@ -232,13 +180,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
                     .snippet(snippet)
                     .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
             )
-
-            selectedLocationLatLng = latLng
-            selectedLocationName = "Custom location"
         }
-    }
+    }*/
 
-    private fun setMapStyle(map: GoogleMap) {
+   /* private fun setMapStyle(map: GoogleMap) {
         try {
             val success = map.setMapStyle(
                 MapStyleOptions.loadRawResourceStyle(
@@ -252,55 +197,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         } catch (e: Resources.NotFoundException) {
             Log.e(TAG, "Can't find google map style. Error: $e")
         }
+    }*/
+
+    private fun isLocationPermissionGranted(): Boolean {
+        return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
+            requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
+        )
     }
 
-    private fun showToastWithSettingsAction(
-        view: View,
-        textRId: Int,
-        length: Int = Snackbar.LENGTH_LONG
-    ): Snackbar {
-        return Snackbar.make(view, textRId, length).apply {
-            setAction(R.string.settings) {
-                // Displays App settings screen.
-                startActivity(Intent().apply {
-                    action = Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                    data = Uri.fromParts("package", BuildConfig.APPLICATION_ID, null)
-                    flags = Intent.FLAG_ACTIVITY_NEW_TASK
-                })
-            }
-        }
+    private fun requestLocationPermission() {
+        startForLocationPermissionResult.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    private fun validateSelectedLocation() =
-        if (null == selectedLocationLatLng) {
-            _viewModel.showToast.value = "Please select location"
-            false
-        } else {
-            true
-        }
 
-    override fun onLocationChanged(location: Location) {
-        val latLng = LatLng(location.latitude, location.longitude)
-        val zoomLevel = 12.0f
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))
-
-        //unregister, we need the current location only once
-        locationManager.removeUpdates(this)
-    }
-
-    /**
-     * This method is deprecated in Q+. But on API 25 it crashes if you do not implement it
-     */
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-        Log.d(TAG, "onStatusChanged called")
-    }
-
-    override fun onProviderEnabled(provider: String) {
-        Log.d(TAG, "onProviderEnabled called")
-    }
-
-    override fun onProviderDisabled(provider: String) {
-        Log.d(TAG, "onProviderDisabled called")
+    private fun hideKeyboard() {
+        val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        imm.hideSoftInputFromWindow(requireView().windowToken, 0)
     }
 
 }
