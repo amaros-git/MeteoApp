@@ -3,11 +3,10 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:id="@+id/nav_graph"
-    app:startDestination="@id/FirstFragment">
+    app:startDestination="@id/mapFragment">
 
     <fragment
-        android:id="@+id/FirstFragment"
+        android:id="@+id/mapFragment"
         android:name="lv.maros.meteoapp.MapFragment"
-        android:label="@string/first_fragment_label"
-        tools:layout="@layout/fragment_map"/>
+        android:label="MapFragment" />
 </navigation>

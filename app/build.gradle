@@ -13,6 +13,7 @@ android {
     buildToolsVersion "30.0.3"
 
     defaultConfig {
+        multiDexEnabled true
         applicationId "lv.maros.meteoapp"
         minSdkVersion 19
         targetSdkVersion 30
