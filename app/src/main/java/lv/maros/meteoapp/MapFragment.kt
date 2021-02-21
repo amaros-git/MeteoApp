@@ -3,36 +3,24 @@ package lv.maros.meteoapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.app.AlertDialog
 import android.content.Context
-import android.content.Intent
 import android.content.pm.PackageManager
-import android.content.res.Resources
 import android.location.Location
-import android.location.LocationManager
-import android.net.Uri
-import android.os.Build
 import android.os.Bundle
-import android.provider.Settings
-import android.util.Log
 import android.view.*
 import android.view.inputmethod.InputMethodManager
-import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.annotation.RequiresApi
-import androidx.core.content.ContentProviderCompat.requireContext
 import androidx.core.content.ContextCompat
-import androidx.core.content.ContextCompat.checkSelfPermission
-import androidx.databinding.DataBindingUtil
 import androidx.fragment.app.Fragment
+import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
+import com.google.android.gms.maps.model.LatLng
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 
 @AndroidEntryPoint
@@ -50,9 +38,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private val startForLocationPermissionResult = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { result ->
-        Timber.d("permission result = $result")
+        Timber.d("location permission result = $result")
         if (result) {
-            //getMyLocation()
+            enableLocationFeatures()
         } else {
             showToastWithExplanation()
         }
@@ -74,6 +62,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         return binding.root
     }
 
+    override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
+        super.onViewCreated(view, savedInstanceState)
+
+        viewModel.currentLocation.observe(viewLifecycleOwner) {
+            processLocationChange(it)
+        }
+    }
+
     override fun onStart() {
         super.onStart()
     }
@@ -85,48 +81,65 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             Snackbar.LENGTH_LONG
         ).apply {
             setAction(R.string.why) {
+                //TODO show dialog with explanation
             }
             show()
         }
     }
 
-    /*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-        inflater.inflate(R.menu.map_options, menu)
+    /**
+     * Must be called from onMapReady()
+     */
+    private fun enableLocationFeatures() {
+        enableMyLocation()
     }
 
-    override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-        R.id.normal_map -> {
-            map.mapType = GoogleMap.MAP_TYPE_NORMAL
-            true
-        }
-        R.id.hybrid_map -> {
-            map.mapType = GoogleMap.MAP_TYPE_HYBRID
-            true
-        }
-        R.id.satellite_map -> {
-            map.mapType = GoogleMap.MAP_TYPE_SATELLITE
-            true
-        }
-        R.id.terrain_map -> {
-            map.mapType = GoogleMap.MAP_TYPE_TERRAIN
-            true
-        }
-        else -> super.onOptionsItemSelected(item)
-    }*/
+    private fun processLocationChange(location: Location) {
+        val latLng = LatLng(location.latitude, location.longitude)
+        val zoomLevel = viewModel.getZoomLevel(location)
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))
+    }
 
+/*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.map_options, menu)
+}
 
-
+override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+    R.id.normal_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_NORMAL
+        true
+    }
+    R.id.hybrid_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_HYBRID
+        true
+    }
+    R.id.satellite_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+        true
+    }
+    R.id.terrain_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_TERRAIN
+        true
+    }
+    else -> super.onOptionsItemSelected(item)
+}*/
 
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
+
+        if (!isLocationPermissionGranted()) {
+            requestLocationPermission()
+        } else {
+            enableLocationFeatures()
+        }
 
         with(map.uiSettings) {
             isZoomControlsEnabled = true
             isCompassEnabled = true
         }
 
-        enableMyLocation()
+
 
         /*setMapLongClick(map)
 
@@ -137,12 +150,10 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
-        /*if (!isForegroundLocationPermissionAllowed()) {
-            requestForeGroundLocationPermission()
-            return
+        if (isLocationPermissionGranted()) {
+            viewModel.startLocationListener()
+            map.isMyLocationEnabled = true
         }
-        registerLocationListener()
-        map.isMyLocationEnabled = true*/
     }
 /*
     private fun setPoiClick(map: GoogleMap) {
@@ -162,42 +173,42 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         }
     }*/
 
-   /* private fun setMapLongClick(map: GoogleMap) {
-        map.setOnMapLongClickListener { latLng ->
-            currentMarker?.remove()
+/* private fun setMapLongClick(map: GoogleMap) {
+     map.setOnMapLongClickListener { latLng ->
+         currentMarker?.remove()
 
-            val snippet = String.format(
-                Locale.getDefault(),
-                "Lat: %1$.5f, Long: %2$.5f",
-                latLng.latitude,
-                latLng.longitude
-            )
+         val snippet = String.format(
+             Locale.getDefault(),
+             "Lat: %1$.5f, Long: %2$.5f",
+             latLng.latitude,
+             latLng.longitude
+         )
 
-            currentMarker = map.addMarker(
-                MarkerOptions()
-                    .position(latLng)
-                    .title(getString(R.string.dropped_pin))
-                    .snippet(snippet)
-                    .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-            )
-        }
-    }*/
+         currentMarker = map.addMarker(
+             MarkerOptions()
+                 .position(latLng)
+                 .title(getString(R.string.dropped_pin))
+                 .snippet(snippet)
+                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+         )
+     }
+ }*/
 
-   /* private fun setMapStyle(map: GoogleMap) {
-        try {
-            val success = map.setMapStyle(
-                MapStyleOptions.loadRawResourceStyle(
-                    requireContext(),
-                    R.raw.map_style
-                )
-            )
-            if (!success) {
-                Log.d(TAG, "Google Map style parsing error")
-            }
-        } catch (e: Resources.NotFoundException) {
-            Log.e(TAG, "Can't find google map style. Error: $e")
-        }
-    }*/
+/* private fun setMapStyle(map: GoogleMap) {
+     try {
+         val success = map.setMapStyle(
+             MapStyleOptions.loadRawResourceStyle(
+                 requireContext(),
+                 R.raw.map_style
+             )
+         )
+         if (!success) {
+             Log.d(TAG, "Google Map style parsing error")
+         }
+     } catch (e: Resources.NotFoundException) {
+         Log.e(TAG, "Can't find google map style. Error: $e")
+     }
+ }*/
 
     private fun isLocationPermissionGranted(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
@@ -211,7 +222,8 @@ class MapFragment : Fragment(), OnMapReadyCallback {
 
 
     private fun hideKeyboard() {
-        val imm = activity?.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+        val imm =
+            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(requireView().windowToken, 0)
     }
 

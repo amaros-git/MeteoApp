@@ -27,16 +27,5 @@
             app:layout_constraintTop_toTopOf="parent"
             app:layout_constraintVertical_bias="0.0" />
 
-        <com.google.android.material.floatingactionbutton.FloatingActionButton
-            android:id="@+id/search_fab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|end"
-            android:layout_margin="@dimen/margin_normal"
-            android:contentDescription="@string/button_search_for_location_by_name"
-            app:layout_constraintBottom_toBottomOf="parent"
-            app:layout_constraintEnd_toEndOf="parent"
-            app:srcCompat="@android:drawable/ic_search_category_default" />
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </layout>
