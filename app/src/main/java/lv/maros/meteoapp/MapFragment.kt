@@ -9,6 +9,8 @@ import android.location.Location
 import android.os.Bundle
 import android.view.*
 import android.view.inputmethod.InputMethodManager
+import android.widget.CheckBox
+import android.widget.SeekBar
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
@@ -16,15 +18,17 @@ import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
-import com.google.android.gms.maps.model.LatLng
+import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
+import java.util.ArrayList
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MapFragment : Fragment(), OnMapReadyCallback {
+class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListener,
+    GoogleMap.OnGroundOverlayClickListener {
 
     @Inject
     lateinit var viewModel: MapViewModel
@@ -32,6 +36,12 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     private lateinit var binding: FragmentMapBinding
 
     private lateinit var map: GoogleMap
+    private val images: MutableList<BitmapDescriptor> = ArrayList()
+    private var groundOverlay: GroundOverlay? = null
+    private var groundOverlayRotated: GroundOverlay? = null
+    private lateinit var transparencyBar: SeekBar
+    private var currentEntry = 0
+
 
     //private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
@@ -68,6 +78,19 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         viewModel.currentLocation.observe(viewLifecycleOwner) {
             processLocationChange(it)
         }
+
+        transparencyBar = binding.transparencySeekBar
+        transparencyBar.max = TRANSPARENCY_MAX
+        transparencyBar.progress = 0
+
+        binding.toggleClickability.setOnClickListener {
+            toggleClickability(it)
+        }
+
+        binding.switchImage.setOnClickListener {
+            switchImage(it)
+        }
+
     }
 
     override fun onStart() {
@@ -95,9 +118,9 @@ class MapFragment : Fragment(), OnMapReadyCallback {
     }
 
     private fun processLocationChange(location: Location) {
-        val latLng = LatLng(location.latitude, location.longitude)
+       /* val latLng = LatLng(location.latitude, location.longitude)
         val zoomLevel = viewModel.getZoomLevel(location)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))
+        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))*/
     }
 
 /*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
@@ -139,6 +162,38 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
             isCompassEnabled = true
         }
 
+        map.setOnGroundOverlayClickListener(this)
+        map.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                NEWARK,
+                11f
+            )
+        )
+        images.clear()
+        images.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_nj_1922))
+        images.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_prudential_sunny))
+
+        // Add a small, rotated overlay that is clickable by default
+        // (set by the initial state of the checkbox.)
+        groundOverlayRotated = map.addGroundOverlay(
+            GroundOverlayOptions()
+                .image(images[1]).anchor(0f, 1f)
+                .position(NEAR_NEWARK, 4300f, 3025f)
+                .bearing(30f)
+                .clickable((binding.toggleClickability).isChecked)
+        )
+
+        // Add a large overlay at Newark on top of the smaller overlay.
+        groundOverlay = map.addGroundOverlay(
+            GroundOverlayOptions()
+                .image(images[currentEntry]).anchor(0f, 1f)
+                .position(NEWARK, 8600f, 6500f)
+        )
+        transparencyBar.setOnSeekBarChangeListener(this)
+
+        // Override the default content description on the view, for accessibility mode.
+        // Ideally this string would be localised.
+        map.setContentDescription("Google Map with ground overlay.")
 
 
         /*setMapLongClick(map)
@@ -225,6 +280,53 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         val imm =
             requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         imm.hideSoftInputFromWindow(requireView().windowToken, 0)
+    }
+
+    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
+        groundOverlay?.transparency = progress.toFloat() / TRANSPARENCY_MAX.toFloat()
+    }
+
+    override fun onStartTrackingTouch(seekBar: SeekBar?) {
+        Timber.d("onStartTrackingTouch called")
+    }
+
+    override fun onStopTrackingTouch(seekBar: SeekBar?) {
+        Timber.d("onStopTrackingTouch called")
+    }
+
+    private fun switchImage(view: View?) {
+        val overlay = groundOverlay ?: return
+        Timber.d("Here")
+        currentEntry = (currentEntry + 1) % images.size
+        overlay.setImage(images[currentEntry])
+    }
+
+    /**
+     * Toggles the visibility between 100% and 50% when a [GroundOverlay] is clicked.
+     */
+    override fun onGroundOverlayClick(groundOverlay: GroundOverlay) {
+        // Toggle transparency value between 0.0f and 0.5f. Initial default value is 0.0f.
+        val overlayRotated = groundOverlayRotated ?: return
+        overlayRotated.transparency = 0.5f - overlayRotated.transparency
+    }
+
+    /**
+     * Toggles the clickability of the smaller, rotated overlay based on the state of the View that
+     * triggered this call.
+     * This callback is defined on the CheckBox in the layout for this Activity.
+     */
+    private fun toggleClickability(view: View) {
+        groundOverlayRotated?.isClickable = (view as CheckBox).isChecked
+    }
+
+
+    companion object {
+        private const val TRANSPARENCY_MAX = 100
+        private val NEWARK = LatLng(40.714086, -74.228697)
+        private val NEAR_NEWARK = LatLng(
+            NEWARK.latitude - 0.001,
+            NEWARK.longitude - 0.025
+        )
     }
 
 }
