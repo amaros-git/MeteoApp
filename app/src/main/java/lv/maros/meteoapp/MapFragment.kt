@@ -21,6 +21,11 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
+import kotlinx.coroutines.GlobalScope
+import kotlinx.coroutines.launch
+import lv.maros.meteoapp.data.CitiesRepository
+import lv.maros.meteoapp.data.network.CitiesApi
+import lv.maros.meteoapp.data.network.Result
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
 import java.util.ArrayList
@@ -95,6 +100,21 @@ class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListe
 
     override fun onStart() {
         super.onStart()
+
+        //TODO TEST ONLY
+        testCities()
+    }
+
+    private fun testCities() {
+        val repo = CitiesRepository(CitiesApi)
+        GlobalScope.launch {
+            val result = repo.getRegion()
+            if (result is Result.Success) {
+                Timber.d(result.data.toString())
+            } else {
+                Timber.d((result as Result.Error).message)
+            }
+        }
     }
 
     private fun showToastWithExplanation() {

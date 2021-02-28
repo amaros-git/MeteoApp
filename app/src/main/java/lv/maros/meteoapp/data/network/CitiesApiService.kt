@@ -4,13 +4,15 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import lv.maros.meteoapp.data.network.models.RegionsByCountryResponse
 import retrofit2.Retrofit
+import retrofit2.HttpException
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
 import java.net.SocketTimeoutException
 
-private const val BASE_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo"
+private const val BASE_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/"
 
 private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
@@ -34,8 +36,11 @@ private val retrofit = Retrofit.Builder()
  */
 interface CitiesApiService {
 
-    @GET
-    suspend fun getCitiesEntryPoint()
+    @GET("countries/LV/regions")
+    suspend fun getRegions(
+        @Query("offset") offset: Int = 0,
+        @Query("limit") maxResponseEntries: Int = 10 //max count for free account
+    ): RegionsByCountryResponse?
 }
 
 object CitiesApi {
