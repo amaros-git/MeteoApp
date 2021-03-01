@@ -25,7 +25,8 @@ private val retrofit = Retrofit.Builder()
         .baseUrl(BASE_URL)
         .build()
 
-/** All methods may throw the following:
+/**
+ * All methods may throw the following:
  * @throws HttpException
  * @throws SocketTimeoutException
  * @throws Exception no data is received
