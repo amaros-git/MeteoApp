@@ -4,4 +4,5 @@
     <string name="button_search_for_location_by_name">Button search for location by name</string>
     <string name="please_enable_location">Please enable location for better experience</string>
     <string name="why">Why ?</string>
+    <string name="empty_response">connection is OK, but empty response is received</string>
 </resources>

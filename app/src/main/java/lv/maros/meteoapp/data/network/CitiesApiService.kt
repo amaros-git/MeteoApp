@@ -14,6 +14,8 @@ import java.net.SocketTimeoutException
 
 private const val BASE_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/"
 
+const val MAX_RESPONSE_ENTRY_COUNT = 10
+
 private val moshi = Moshi.Builder()
         .add(KotlinJsonAdapterFactory())
         .build()
@@ -40,7 +42,7 @@ interface CitiesApiService {
     @GET("countries/LV/regions")
     suspend fun getRegions(
         @Query("offset") offset: Int = 0,
-        @Query("limit") maxResponseEntries: Int = 10 //max count for free account
+        @Query("limit") maxResponseEntries: Int = MAX_RESPONSE_ENTRY_COUNT //max count for free account
     ): RegionsByCountryResponse?
 }
 

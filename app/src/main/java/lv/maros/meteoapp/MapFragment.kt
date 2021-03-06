@@ -108,7 +108,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListe
     private fun testCities() {
         val repo = CitiesRepository(CitiesApi)
         GlobalScope.launch {
-            val result = repo.getRegion()
+            val result = repo.getCitiesByCountry()
             if (result is Result.Success) {
                 Timber.d(result.data.toString())
             } else {
