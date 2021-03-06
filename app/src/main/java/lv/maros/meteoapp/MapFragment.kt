@@ -24,6 +24,7 @@ import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
 import lv.maros.meteoapp.data.CitiesRepository
+import lv.maros.meteoapp.data.local.CitiesDatabase
 import lv.maros.meteoapp.data.network.CitiesApi
 import lv.maros.meteoapp.data.network.Result
 import lv.maros.meteoapp.databinding.FragmentMapBinding
@@ -106,7 +107,7 @@ class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListe
     }
 
     private fun testCities() {
-        val repo = CitiesRepository(CitiesApi)
+        val repo = CitiesRepository(CitiesApi, CitiesDatabase.getInstance(requireContext()))
         GlobalScope.launch {
             val result = repo.getCitiesByCountry()
             if (result is Result.Success) {

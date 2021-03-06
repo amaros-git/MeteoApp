@@ -4,28 +4,30 @@ import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterF
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
+import lv.maros.meteoapp.data.network.models.CitiesByRegionResponse
 import lv.maros.meteoapp.data.network.models.RegionsByCountryResponse
 import retrofit2.Retrofit
 import retrofit2.HttpException
 import retrofit2.converter.moshi.MoshiConverterFactory
 import retrofit2.http.GET
 import retrofit2.http.Query
+import retrofit2.http.Url
 import java.net.SocketTimeoutException
 
-private const val BASE_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/"
+const val GEODB_CITIES_BASE_URL = "https://wft-geo-db.p.rapidapi.com/v1/geo/countries/"
 
-const val MAX_RESPONSE_ENTRY_COUNT = 10
+const val MAX_RESPONSE_ENTRY_COUNT = 10  //max count for free account
 
 private val moshi = Moshi.Builder()
-        .add(KotlinJsonAdapterFactory())
-        .build()
+    .add(KotlinJsonAdapterFactory())
+    .build()
 
 private val retrofit = Retrofit.Builder()
-        .addConverterFactory(MoshiConverterFactory.create(moshi))
-        .addCallAdapterFactory(CoroutineCallAdapterFactory())
-        .client(CitiesHttpClient.getClient())
-        .baseUrl(BASE_URL)
-        .build()
+    .addConverterFactory(MoshiConverterFactory.create(moshi))
+    .addCallAdapterFactory(CoroutineCallAdapterFactory())
+    .client(CitiesHttpClient.getClient())
+    .baseUrl(GEODB_CITIES_BASE_URL)
+    .build()
 
 /**
  * All methods may throw the following:
@@ -39,11 +41,17 @@ private val retrofit = Retrofit.Builder()
  */
 interface CitiesApiService {
 
-    @GET("countries/LV/regions")
+    @GET("LV/regions")
     suspend fun getRegions(
         @Query("offset") offset: Int = 0,
-        @Query("limit") maxResponseEntries: Int = MAX_RESPONSE_ENTRY_COUNT //max count for free account
+        @Query("limit") maxResponseEntries: Int = MAX_RESPONSE_ENTRY_COUNT
     ): RegionsByCountryResponse?
+
+    suspend fun getCities(
+        @Url url: String,
+        @Query("offset") offset: Int = 0,
+        @Query("limit") maxResponseEntries: Int = MAX_RESPONSE_ENTRY_COUNT
+    ): CitiesByRegionResponse?
 }
 
 object CitiesApi {
