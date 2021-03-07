@@ -47,6 +47,7 @@ interface CitiesApiService {
         @Query("limit") maxResponseEntries: Int = MAX_RESPONSE_ENTRY_COUNT
     ): RegionsByCountryResponse?
 
+    @GET
     suspend fun getCities(
         @Url url: String,
         @Query("offset") offset: Int = 0,

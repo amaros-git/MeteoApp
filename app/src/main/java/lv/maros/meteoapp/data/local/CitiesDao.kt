@@ -15,9 +15,9 @@ interface CitiesDao {
     suspend fun getRegions(): List<Region>
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
-    suspend fun insertCity(region: City)
+    suspend fun saveCity(city: City)
 
-    @Query("SELECT * FROM region_table")
+    @Query("SELECT * FROM city_table ORDER BY name ASC ")
     suspend fun getCities(): List<City>
 
    /* @Query("SELECT * FROM election_table")

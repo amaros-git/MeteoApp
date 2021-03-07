@@ -7,7 +7,7 @@ import androidx.room.RoomDatabase
 import lv.maros.meteoapp.data.network.models.City
 import lv.maros.meteoapp.data.network.models.Region
 
-@Database(entities = [Region::class, City::class], version = 1, exportSchema = false)
+@Database(entities = [Region::class, City::class], version = 2, exportSchema = false)
 abstract class CitiesDatabase: RoomDatabase() {
 
     abstract val citiesDao: CitiesDao
