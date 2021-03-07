@@ -1,8 +1,10 @@
 package lv.maros.meteoapp.data.network.models
 
 import androidx.room.ColumnInfo
+import androidx.room.Entity
 import androidx.room.PrimaryKey
 
+@Entity(tableName = "city_table")
 data class City(
     @PrimaryKey
     @ColumnInfo(name = "wiki_data_id")

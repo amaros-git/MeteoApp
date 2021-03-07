@@ -27,17 +27,16 @@ class CitiesRepository(
     suspend fun getCitiesByCountry(
         country: String = "LV"
     ): Result<List<City>> = withContext(ioDispatcher) {
-        val regions = getRegionsFromNetwork()
+        /* val regions = getRegionsFromNetwork()
+         regions.forEach {
+             Timber.d(it.toString())
+             //citiesDb.citiesDao.insertRegion(it)
+         }*/
+
+        val regions = citiesDb.citiesDao.getRegions()
         regions.forEach {
-            Timber.d(it.toString())
-            //citiesDb.citiesDao.insertRegion(it)
+            Timber.d("local region = $it")
         }
-
-        /*  val regions = citiesDb.citiesDao.getRegions()
-          regions.forEach {
-              Timber.d("local region = $it")
-          }*/
-
 
         val cities = getCitiesFromNetwork(regions)
         return@withContext Result.Success(emptyList<City>())
@@ -74,11 +73,16 @@ class CitiesRepository(
         }
 
     private suspend fun getCitiesFromNetwork(
-        country: String = "LV",
-        regions: List<Region>
+        regions: List<Region>,
+        country: String = "LV"
     ): List<Region> = withContext(ioDispatcher) {
         val cities = mutableListOf<City>()
         var currentOffset = 0
+        //we have the list of regions. Go through the list and for each region
+        //create correspond link, get cities and save into database.
+        for (i in regions.indices) {
+            Timber.d("Current region = ${regions[i]}")
+        }
         do {
             val response = network.retrofitService.getCities(
                 "$GEODB_CITIES_BASE_URL$country/regions/${}" +

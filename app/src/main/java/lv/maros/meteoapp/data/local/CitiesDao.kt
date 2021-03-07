@@ -14,6 +14,12 @@ interface CitiesDao {
     @Query("SELECT * FROM region_table")
     suspend fun getRegions(): List<Region>
 
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertCity(region: City)
+
+    @Query("SELECT * FROM region_table")
+    suspend fun getCities(): List<City>
+
    /* @Query("SELECT * FROM election_table")
     fun observeElections(): LiveData<List<Election>>
 
