@@ -20,6 +20,9 @@ interface CitiesDao {
     @Query("SELECT * FROM city_table ORDER BY name ASC ")
     suspend fun getCities(): List<City>
 
+    @Query("SELECT * FROM city_table WHERE name = :cityName")
+    suspend fun getCityByName(cityName: String): City?
+
    /* @Query("SELECT * FROM election_table")
     fun observeElections(): LiveData<List<Election>>
 

@@ -45,10 +45,16 @@ class CitiesRepository(
         }*/
 
         val cities = citiesDb.citiesDao.getCities()
-        cities.forEach {
-            Timber.d(it.toString())
+        if (cities.isNullOrEmpty()) {
+            return@withContext Result.Error("Didn't find any city in database")
         }
-        return@withContext Result.Success(emptyList<City>())
+        return@withContext Result.Success(cities)
+    }
+
+    suspend fun getCityByName(cityName: String): Result<City> = withContext(ioDispatcher) {
+        val city = citiesDb.citiesDao.getCityByName(cityName)
+            ?: return@withContext Result.Error("City with name $cityName doesn't exit in the database")
+        return@withContext Result.Success(city)
     }
 
     private suspend fun getRegionsFromNetwork(

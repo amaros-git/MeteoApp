@@ -11,11 +11,13 @@ import android.view.*
 import android.view.inputmethod.InputMethodManager
 import android.widget.CheckBox
 import android.widget.SeekBar
+import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
+import com.google.android.gms.maps.GoogleMap.OnGroundOverlayClickListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
@@ -33,8 +35,7 @@ import java.util.ArrayList
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListener,
-    GoogleMap.OnGroundOverlayClickListener {
+class MapFragment : Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener {
 
     @Inject
     lateinit var viewModel: MapViewModel
@@ -103,7 +104,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, SeekBar.OnSeekBarChangeListe
         super.onStart()
 
         //TODO TEST ONLY
-        testCities()
     }
 
     private fun testCities() {
