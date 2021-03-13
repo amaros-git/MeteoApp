@@ -12,12 +12,17 @@ import androidx.annotation.Nullable
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.launch
+import lv.maros.meteoapp.data.cities.CitiesRepository
+import lv.maros.meteoapp.data.cities.network.Result
 import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
 
 class MapViewModel @Inject constructor(
-    val app: Application
+    private val app: Application,
+    private val citiesRepo: CitiesRepository
 ) : AndroidViewModel(app), LocationListener {
 
     private val locationManager: LocationManager? =
@@ -46,6 +51,20 @@ class MapViewModel @Inject constructor(
     }
 
     fun getZoomLevel(location: Location) = 5.0f
+
+    fun getCities(country: String) {
+        viewModelScope.launch {
+            val result = citiesRepo.getCitiesByCountry(country)
+            if (result is Result.Success) {
+                result.data.forEach {
+                    Timber.d(it.toString())
+                }
+            } else {
+                Timber.d((result as Result.Error).message)
+            }
+        }
+
+    }
 
     /**
      * This method is deprecated in Q+. But on API 25 it crashes if you do not implement it

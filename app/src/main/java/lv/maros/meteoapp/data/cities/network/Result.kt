@@ -1,4 +1,4 @@
-package lv.maros.meteoapp.data.network
+package lv.maros.meteoapp.data.cities.network
 
 /**
  * A sealed class that encapsulates successful outcome with a value of type [T]

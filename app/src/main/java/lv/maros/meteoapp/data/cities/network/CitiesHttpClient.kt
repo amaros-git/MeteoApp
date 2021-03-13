@@ -1,8 +1,7 @@
-package lv.maros.meteoapp.data.network
+package lv.maros.meteoapp.data.cities.network
 
 import lv.maros.meteoapp.BuildConfig
 import okhttp3.OkHttpClient
-import java.util.*
 
 /**
  * For https://rapidapi.com/wirefreethought/api/geodb-cities/endpoints

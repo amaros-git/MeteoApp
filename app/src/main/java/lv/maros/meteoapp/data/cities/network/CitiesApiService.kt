@@ -1,11 +1,11 @@
-package lv.maros.meteoapp.data.network
+package lv.maros.meteoapp.data.cities.network
 
 import com.jakewharton.retrofit2.adapter.kotlin.coroutines.CoroutineCallAdapterFactory
 import com.squareup.moshi.JsonDataException
 import com.squareup.moshi.Moshi
 import com.squareup.moshi.kotlin.reflect.KotlinJsonAdapterFactory
-import lv.maros.meteoapp.data.network.models.CitiesByRegionResponse
-import lv.maros.meteoapp.data.network.models.RegionsByCountryResponse
+import lv.maros.meteoapp.data.cities.network.models.CitiesByRegionResponse
+import lv.maros.meteoapp.data.cities.network.models.RegionsByCountryResponse
 import retrofit2.Retrofit
 import retrofit2.HttpException
 import retrofit2.converter.moshi.MoshiConverterFactory

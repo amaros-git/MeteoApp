@@ -1,9 +1,8 @@
-package lv.maros.meteoapp.data.local
+package lv.maros.meteoapp.data.cities.local
 
-import androidx.lifecycle.LiveData
 import androidx.room.*
-import lv.maros.meteoapp.data.network.models.City
-import lv.maros.meteoapp.data.network.models.Region
+import lv.maros.meteoapp.data.cities.network.models.City
+import lv.maros.meteoapp.data.cities.network.models.Region
 
 @Dao
 interface CitiesDao {

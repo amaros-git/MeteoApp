@@ -25,10 +25,10 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import kotlinx.coroutines.GlobalScope
 import kotlinx.coroutines.launch
-import lv.maros.meteoapp.data.CitiesRepository
-import lv.maros.meteoapp.data.local.CitiesDatabase
-import lv.maros.meteoapp.data.network.CitiesApi
-import lv.maros.meteoapp.data.network.Result
+import lv.maros.meteoapp.data.cities.CitiesRepository
+import lv.maros.meteoapp.data.cities.local.CitiesDatabase
+import lv.maros.meteoapp.data.cities.network.CitiesApi
+import lv.maros.meteoapp.data.cities.network.Result
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
 import java.util.ArrayList
@@ -103,19 +103,9 @@ class MapFragment : Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnG
     override fun onStart() {
         super.onStart()
 
-        //TODO TEST ONLY
-    }
+        viewModel.getCities("LV")
 
-    private fun testCities() {
-        val repo = CitiesRepository(CitiesApi, CitiesDatabase.getInstance(requireContext()))
-        GlobalScope.launch {
-            val result = repo.getCitiesByCountry()
-            if (result is Result.Success) {
-                Timber.d(result.data.toString())
-            } else {
-                Timber.d((result as Result.Error).message)
-            }
-        }
+        //TODO TEST ONLY
     }
 
     private fun showToastWithExplanation() {

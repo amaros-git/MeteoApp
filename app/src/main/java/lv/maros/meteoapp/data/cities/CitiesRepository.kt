@@ -1,18 +1,18 @@
-package lv.maros.meteoapp.data
+package lv.maros.meteoapp.data.cities
 
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.withContext
-import lv.maros.meteoapp.data.local.CitiesDatabase
-import lv.maros.meteoapp.data.network.CitiesApi
-import lv.maros.meteoapp.data.network.GEODB_CITIES_BASE_URL
-import lv.maros.meteoapp.data.network.MAX_RESPONSE_ENTRY_COUNT
-import lv.maros.meteoapp.data.network.Result
-import lv.maros.meteoapp.data.network.models.CitiesByRegionResponse
-import lv.maros.meteoapp.data.network.models.City
-import lv.maros.meteoapp.data.network.models.Region
-import lv.maros.meteoapp.data.network.models.RegionsByCountryResponse
+import lv.maros.meteoapp.data.cities.local.CitiesDatabase
+import lv.maros.meteoapp.data.cities.network.CitiesApi
+import lv.maros.meteoapp.data.cities.network.GEODB_CITIES_BASE_URL
+import lv.maros.meteoapp.data.cities.network.MAX_RESPONSE_ENTRY_COUNT
+import lv.maros.meteoapp.data.cities.network.Result
+import lv.maros.meteoapp.data.cities.network.models.CitiesByRegionResponse
+import lv.maros.meteoapp.data.cities.network.models.City
+import lv.maros.meteoapp.data.cities.network.models.Region
+import lv.maros.meteoapp.data.cities.network.models.RegionsByCountryResponse
 import timber.log.Timber
 
 class CitiesRepository(

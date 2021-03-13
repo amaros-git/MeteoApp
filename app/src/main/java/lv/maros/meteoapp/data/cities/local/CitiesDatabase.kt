@@ -1,11 +1,11 @@
-package lv.maros.meteoapp.data.local
+package lv.maros.meteoapp.data.cities.local
 
 import android.content.Context
 import androidx.room.Database
 import androidx.room.Room
 import androidx.room.RoomDatabase
-import lv.maros.meteoapp.data.network.models.City
-import lv.maros.meteoapp.data.network.models.Region
+import lv.maros.meteoapp.data.cities.network.models.City
+import lv.maros.meteoapp.data.cities.network.models.Region
 
 @Database(entities = [Region::class, City::class], version = 2, exportSchema = false)
 abstract class CitiesDatabase: RoomDatabase() {

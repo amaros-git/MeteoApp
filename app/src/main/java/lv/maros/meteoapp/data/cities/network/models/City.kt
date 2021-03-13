@@ -1,4 +1,4 @@
-package lv.maros.meteoapp.data.network.models
+package lv.maros.meteoapp.data.cities.network.models
 
 import androidx.room.ColumnInfo
 import androidx.room.Entity
