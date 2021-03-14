@@ -5,6 +5,8 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.graphics.Bitmap
+import android.graphics.Canvas
 import android.location.Location
 import android.os.Bundle
 import android.view.*
@@ -35,8 +37,9 @@ import java.util.ArrayList
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MapFragment : Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener {
-
+class MapFragment :
+    Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener
+{
     @Inject
     lateinit var viewModel: MapViewModel
 
@@ -134,30 +137,6 @@ class MapFragment : Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnG
         map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))*/
     }
 
-/*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
-    inflater.inflate(R.menu.map_options, menu)
-}
-
-override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
-    R.id.normal_map -> {
-        map.mapType = GoogleMap.MAP_TYPE_NORMAL
-        true
-    }
-    R.id.hybrid_map -> {
-        map.mapType = GoogleMap.MAP_TYPE_HYBRID
-        true
-    }
-    R.id.satellite_map -> {
-        map.mapType = GoogleMap.MAP_TYPE_SATELLITE
-        true
-    }
-    R.id.terrain_map -> {
-        map.mapType = GoogleMap.MAP_TYPE_TERRAIN
-        true
-    }
-    else -> super.onOptionsItemSelected(item)
-}*/
-
 
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
@@ -173,33 +152,22 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
             isCompassEnabled = true
         }
 
-        map.setOnGroundOverlayClickListener(this)
+        map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL); // Set a preference for minimum zoom (Zoom out).
+        map.setMaxZoomPreference(14.0f); // Set a preference for maximum zoom (Zoom In).
+
         map.moveCamera(
             CameraUpdateFactory.newLatLngZoom(
                 NEWARK,
                 11f
             )
         )
-        images.clear()
-        images.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_nj_1922))
-        images.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_prudential_sunny))
 
-        // Add a small, rotated overlay that is clickable by default
-        // (set by the initial state of the checkbox.)
-        groundOverlayRotated = map.addGroundOverlay(
-            GroundOverlayOptions()
-                .image(images[1]).anchor(0f, 1f)
-                .position(NEAR_NEWARK, 4300f, 3025f)
-                .bearing(30f)
-                .clickable((binding.toggleClickability).isChecked)
+        map.addMarker(MarkerOptions()
+            .position(NEWARK)
+            .icon(viewModel.bitmapDescriptorFromVector(requireContext(), R.drawable.ic_sunny))
+            .title("Opa")
         )
 
-        // Add a large overlay at Newark on top of the smaller overlay.
-        groundOverlay = map.addGroundOverlay(
-            GroundOverlayOptions()
-                .image(images[currentEntry]).anchor(0f, 1f)
-                .position(NEWARK, 8600f, 6500f)
-        )
         transparencyBar.setOnSeekBarChangeListener(this)
 
         // Override the default content description on the view, for accessibility mode.
@@ -214,6 +182,8 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         setMapStyle(map)*/
     }
 
+
+
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
         if (isLocationPermissionGranted()) {
@@ -221,60 +191,9 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
             map.isMyLocationEnabled = true
         }
     }
-/*
-    private fun setPoiClick(map: GoogleMap) {
-        map.setOnPoiClickListener { poi ->
-            currentMarker?.remove()
 
-            currentMarker = map.addMarker(
-                MarkerOptions()
-                    .position(poi.latLng)
-                    .title(poi.name)
-            ).apply {
-                showInfoWindow()
-            }
 
-            selectedLocationLatLng = poi.latLng
-            selectedLocationName = poi.name
-        }
-    }*/
 
-/* private fun setMapLongClick(map: GoogleMap) {
-     map.setOnMapLongClickListener { latLng ->
-         currentMarker?.remove()
-
-         val snippet = String.format(
-             Locale.getDefault(),
-             "Lat: %1$.5f, Long: %2$.5f",
-             latLng.latitude,
-             latLng.longitude
-         )
-
-         currentMarker = map.addMarker(
-             MarkerOptions()
-                 .position(latLng)
-                 .title(getString(R.string.dropped_pin))
-                 .snippet(snippet)
-                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
-         )
-     }
- }*/
-
-/* private fun setMapStyle(map: GoogleMap) {
-     try {
-         val success = map.setMapStyle(
-             MapStyleOptions.loadRawResourceStyle(
-                 requireContext(),
-                 R.raw.map_style
-             )
-         )
-         if (!success) {
-             Log.d(TAG, "Google Map style parsing error")
-         }
-     } catch (e: Resources.NotFoundException) {
-         Log.e(TAG, "Can't find google map style. Error: $e")
-     }
- }*/
 
     private fun isLocationPermissionGranted(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
@@ -332,6 +251,9 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
 
 
     companion object {
+        private const val MAP_MIN_ZOOM_LEVEL = 10.0f
+        private const val MAP_DEFAULT_ZOOM_LEVEL = 13.0f
+
         private const val TRANSPARENCY_MAX = 100
         private val NEWARK = LatLng(40.714086, -74.228697)
         private val NEAR_NEWARK = LatLng(
@@ -341,3 +263,114 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
     }
 
 }
+
+
+/*private fun addGroundOverlays() {
+        map.setOnGroundOverlayClickListener(this)
+        map.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                NEWARK,
+                11f
+            )
+        )
+        images.clear()
+        images.add(BitmapDescriptorFactory.fromResource(R.drawable.ic_sunny))
+        images.add(BitmapDescriptorFactory.fromResource(R.drawable.newark_prudential_sunny))
+
+        // Add a small, rotated overlay that is clickable by default
+        // (set by the initial state of the checkbox.)
+        groundOverlayRotated = map.addGroundOverlay(
+            GroundOverlayOptions()
+                .image(images[1]).anchor(0f, 1f)
+                .position(NEAR_NEWARK, 4300f, 3025f)
+                .bearing(30f)
+                .clickable((binding.toggleClickability).isChecked)
+        )
+
+        // Add a large overlay at Newark on top of the smaller overlay.
+        groundOverlay = map.addGroundOverlay(
+            GroundOverlayOptions()
+                .image(images[currentEntry]).anchor(0f, 1f)
+                .position(NEWARK, 8600f, 6500f)
+        )
+
+    }*/
+
+/*
+    private fun setPoiClick(map: GoogleMap) {
+        map.setOnPoiClickListener { poi ->
+            currentMarker?.remove()
+
+            currentMarker = map.addMarker(
+                MarkerOptions()
+                    .position(poi.latLng)
+                    .title(poi.name)
+            ).apply {
+                showInfoWindow()
+            }
+
+            selectedLocationLatLng = poi.latLng
+            selectedLocationName = poi.name
+        }
+    }*/
+
+/* private fun setMapLongClick(map: GoogleMap) {
+     map.setOnMapLongClickListener { latLng ->
+         currentMarker?.remove()
+
+         val snippet = String.format(
+             Locale.getDefault(),
+             "Lat: %1$.5f, Long: %2$.5f",
+             latLng.latitude,
+             latLng.longitude
+         )
+
+         currentMarker = map.addMarker(
+             MarkerOptions()
+                 .position(latLng)
+                 .title(getString(R.string.dropped_pin))
+                 .snippet(snippet)
+                 .icon(BitmapDescriptorFactory.defaultMarker(BitmapDescriptorFactory.HUE_BLUE))
+         )
+     }
+ }*/
+
+/* private fun setMapStyle(map: GoogleMap) {
+     try {
+         val success = map.setMapStyle(
+             MapStyleOptions.loadRawResourceStyle(
+                 requireContext(),
+                 R.raw.map_style
+             )
+         )
+         if (!success) {
+             Log.d(TAG, "Google Map style parsing error")
+         }
+     } catch (e: Resources.NotFoundException) {
+         Log.e(TAG, "Can't find google map style. Error: $e")
+     }
+ }*/
+
+/*override fun onCreateOptionsMenu(menu: Menu, inflater: MenuInflater) {
+    inflater.inflate(R.menu.map_options, menu)
+}
+
+override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
+    R.id.normal_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_NORMAL
+        true
+    }
+    R.id.hybrid_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_HYBRID
+        true
+    }
+    R.id.satellite_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_SATELLITE
+        true
+    }
+    R.id.terrain_map -> {
+        map.mapType = GoogleMap.MAP_TYPE_TERRAIN
+        true
+    }
+    else -> super.onOptionsItemSelected(item)
+}*/
