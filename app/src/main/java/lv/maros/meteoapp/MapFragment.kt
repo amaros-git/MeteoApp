@@ -1,6 +1,5 @@
 package lv.maros.meteoapp
 
-
 import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
@@ -85,8 +84,8 @@ class MapFragment :
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        viewModel.currentLocation.observe(viewLifecycleOwner) {
-            processLocationChange(it)
+        viewModel.showMeteoIconEvent.observe(viewLifecycleOwner) {
+            showMeteoIcon()
         }
 
         transparencyBar = binding.transparencySeekBar

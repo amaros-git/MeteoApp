@@ -20,7 +20,6 @@ class CitiesRepository(
     private val citiesDb: CitiesDatabase,
     private val ioDispatcher: CoroutineDispatcher = Dispatchers.IO
 ) {
-
     /**
      * I'm using Rapid API GeoDB. To get cities by country few steps are required:
      * 1. Get all regions by country

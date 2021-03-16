@@ -1,6 +1,6 @@
-package lv.maros.meteoapp.tools
+package lv.maros.meteoapp.utils
 
-data class MyLocation(
+data class MeteoLocation(
     val latitude: Double,
     val longitude: Double,
     val cityName: String, //TODO get nearest city if outside of city. HOW ?

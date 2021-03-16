@@ -6,18 +6,16 @@ import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
 import android.location.*
-import android.os.Bundle
-import androidx.annotation.Nullable
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
-import androidx.lifecycle.LiveData
-import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.viewModelScope
 import com.google.android.gms.maps.model.BitmapDescriptor
 import com.google.android.gms.maps.model.BitmapDescriptorFactory
 import kotlinx.coroutines.launch
 import lv.maros.meteoapp.data.cities.CitiesRepository
 import lv.maros.meteoapp.data.cities.network.Result
+import lv.maros.meteoapp.utils.MyLocationService
+import lv.maros.meteoapp.utils.SingleLiveEvent
 import timber.log.Timber
 import java.util.*
 import javax.inject.Inject
@@ -25,27 +23,24 @@ import javax.inject.Inject
 class MapViewModel @Inject constructor(
     private val app: Application,
     private val citiesRepo: CitiesRepository
-) : AndroidViewModel(app), LocationListener {
+) : AndroidViewModel(app) {
 
-    private val locationManager: LocationManager? =
-        app.getSystemService(Context.LOCATION_SERVICE) as LocationManager?
+    @Inject
+    lateinit var myLocationManager: MyLocationService
 
-    private val _currentLocation = MutableLiveData<Location>()
-    val currentLocation: LiveData<Location>
-        get() = _currentLocation
+
+    val showMeteoIconEvent = SingleLiveEvent<MeteoIcon>()
 
     /**
      * throws if location permission is not provided in advance
      */
     @SuppressLint("MissingPermission")
     fun startLocationListener() {
-        locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400, 10f, this)
-    }
-
-    override fun onLocationChanged(location: Location) {
-        _currentLocation.value = location
-        val currentCity = getCityNameFromLocation(location)
-        Timber.d("Current city = $currentCity")
+        myLocationManager.setMyLocationListener {
+            //create icon
+            showMeteoIconEvent.value = icon
+        }
+        myLocationManager.startMyLocationService()
     }
 
     /**
@@ -71,6 +66,7 @@ class MapViewModel @Inject constructor(
         }
     }
 
+    //TODO rework to some MeteoIconProvider class
     fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
         return ContextCompat.getDrawable(context, vectorResId)?.run {
             app.resources.configuration.densityDpi //TODO do I need density or I can use intrinsic values ?
@@ -84,25 +80,10 @@ class MapViewModel @Inject constructor(
         }
     }
 
-    /**
-     * This method is deprecated in Q+. But on API 25 it crashes if you do not implement it
-     */
-    override fun onStatusChanged(provider: String?, status: Int, extras: Bundle?) {
-        //Nothing
-    }
-
-    override fun onProviderEnabled(provider: String) {
-        //Nothing
-    }
-
-    override fun onProviderDisabled(provider: String) {
-        //Nothing
-    }
-
     @SuppressLint("MissingPermission")
     override fun onCleared() {
+        myLocationManager.stopMyLocationService()
         super.onCleared()
-        locationManager?.removeUpdates(this)
     }
 
 }
