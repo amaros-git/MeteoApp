@@ -37,20 +37,9 @@ class MapViewModel @Inject constructor(
     @SuppressLint("MissingPermission")
     fun startLocationListener() {
         myLocationManager.setMyLocationListener {
-            //create icon
-            showMeteoIconEvent.value = icon
+            showMeteoIconEvent.value = MeteoIcon(it, R.drawable.ic_sunny)
         }
         myLocationManager.startMyLocationService()
-    }
-
-    /**
-     * @throws IOException if gps disabled. ALso if internet is disabled too TODO check it
-     */
-    private fun getCityNameFromLocation(location: Location): String {
-        val geocoder = Geocoder(app.applicationContext, Locale.getDefault())
-        return geocoder.getFromLocation(location.latitude, location.longitude, 1)
-            .first()
-            .locality
     }
 
     fun getCities(country: String) {

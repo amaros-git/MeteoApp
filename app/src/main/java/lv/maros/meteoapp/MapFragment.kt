@@ -4,8 +4,6 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
-import android.graphics.Bitmap
-import android.graphics.Canvas
 import android.location.Location
 import android.os.Bundle
 import android.view.*
@@ -24,12 +22,6 @@ import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
 import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
-import kotlinx.coroutines.GlobalScope
-import kotlinx.coroutines.launch
-import lv.maros.meteoapp.data.cities.CitiesRepository
-import lv.maros.meteoapp.data.cities.local.CitiesDatabase
-import lv.maros.meteoapp.data.cities.network.CitiesApi
-import lv.maros.meteoapp.data.cities.network.Result
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
 import java.util.ArrayList
@@ -85,7 +77,8 @@ class MapFragment :
         super.onViewCreated(view, savedInstanceState)
 
         viewModel.showMeteoIconEvent.observe(viewLifecycleOwner) {
-            showMeteoIcon()
+            Timber.d("Received meteoIcon = $it")
+            //showMeteoIcon()
         }
 
         transparencyBar = binding.transparencySeekBar

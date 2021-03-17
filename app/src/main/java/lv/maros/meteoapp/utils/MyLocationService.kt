@@ -2,11 +2,13 @@ package lv.maros.meteoapp.utils
 
 import android.annotation.SuppressLint
 import android.content.Context
+import android.location.Geocoder
 import android.location.Location
 import android.location.LocationListener
 import android.location.LocationManager
 import android.os.Bundle
 import timber.log.Timber
+import java.util.*
 import javax.inject.Inject
 import kotlin.properties.Delegates
 
@@ -14,21 +16,22 @@ import kotlin.properties.Delegates
  * at the moment one service : one listener
  */
 class MyLocationService @Inject constructor(
-    appContext: Context
+        private val appContext: Context
 ) : LocationListener {
 
     private val locationManager =
-        appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager?
+            appContext.getSystemService(Context.LOCATION_SERVICE) as LocationManager?
 
     private var mMyLocationListener: MyLocationListener? = null
 
-    private var meteoCurrentLocation: MeteoLocation? by Delegates.observable(null) { _, old, new ->
-        Timber.d("old = $old, new = $new")
-        //send location to the listener if both exist
-        new?.let { myLocation ->
-            mMyLocationListener?.onMyLocationChanged(myLocation)
-        }
-    }
+    private var meteoCurrentLocation: MeteoLocation?
+            by Delegates.observable(null) { _, old, new ->
+                Timber.d("old = $old, new = $new")
+                //send location to the listener if both exist
+                new?.let { meteoLocation ->
+                    mMyLocationListener?.onMyLocationChanged(meteoLocation)
+                }
+            }
 
     fun setMyLocationListener(l: MyLocationListener) {
         mMyLocationListener = l
@@ -40,7 +43,9 @@ class MyLocationService @Inject constructor(
     @SuppressLint("MissingPermission")
     fun startMyLocationService() {
         try {
-            locationManager?.requestLocationUpdates(LocationManager.GPS_PROVIDER, 400, 10f, this)
+            locationManager?.requestLocationUpdates(
+                    LocationManager.GPS_PROVIDER, 400, 10f, this
+            )
         } catch (e: Exception) {
             Timber.e("Exception occurred, check location permission. message = ${e.message}")
         }
@@ -56,19 +61,28 @@ class MyLocationService @Inject constructor(
     }
 
     override fun onLocationChanged(location: Location) {
-        //myCurrentLocation = createMyLocation(location)
+        meteoCurrentLocation = createMyLocation(location)
     }
-
-    /*private fun createMyLocation(location: Location): MyLocation {
-        val geocoder = Geocoder(app.applicationContext, Locale.getDefault())
-
-    }*/
 
     /**
      * To set location from outside
      */
-    fun setMyLocation(location: MeteoLocation) {
+    fun setLocation(location: MeteoLocation) {
         meteoCurrentLocation = location
+    }
+
+    private fun createMyLocation(location: Location): MeteoLocation {
+        val geocoder = Geocoder(appContext, Locale.getDefault())
+        val address = geocoder.getFromLocation(location.latitude, location.longitude, 1)
+                .first()
+
+        return MeteoLocation(
+                location.latitude,
+                location.longitude,
+                address.locality,
+                address.countryName
+        )
+
     }
 
     /**
