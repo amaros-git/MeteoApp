@@ -4,6 +4,7 @@ import android.Manifest
 import android.annotation.SuppressLint
 import android.content.Context
 import android.content.pm.PackageManager
+import android.content.res.Resources
 import android.location.Location
 import android.os.Bundle
 import android.view.*
@@ -78,7 +79,8 @@ class MapFragment :
 
         viewModel.showMeteoIconEvent.observe(viewLifecycleOwner) {
             Timber.d("Received meteoIcon = $it")
-            //showMeteoIcon()
+            showMeteoIcon(it)
+            moveCamera(it)
         }
 
         transparencyBar = binding.transparencySeekBar
@@ -123,13 +125,6 @@ class MapFragment :
         enableMyLocation()
     }
 
-    private fun processLocationChange(location: Location) {
-       /* val latLng = LatLng(location.latitude, location.longitude)
-        val zoomLevel = viewModel.getZoomLevel(location)
-        map.moveCamera(CameraUpdateFactory.newLatLngZoom(latLng, zoomLevel))*/
-    }
-
-
     override fun onMapReady(googleMap: GoogleMap) {
         map = googleMap
 
@@ -144,15 +139,8 @@ class MapFragment :
             isCompassEnabled = true
         }
 
-        map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL); // Set a preference for minimum zoom (Zoom out).
-        map.setMaxZoomPreference(14.0f); // Set a preference for maximum zoom (Zoom In).
-
-        map.moveCamera(
-            CameraUpdateFactory.newLatLngZoom(
-                NEWARK,
-                11f
-            )
-        )
+        map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL)
+        map.setMaxZoomPreference(MAP_MAX_ZOOM_LEVEL)
 
         map.addMarker(MarkerOptions()
             .position(NEWARK)
@@ -162,19 +150,43 @@ class MapFragment :
 
         transparencyBar.setOnSeekBarChangeListener(this)
 
-        // Override the default content description on the view, for accessibility mode.
-        // Ideally this string would be localised.
         map.setContentDescription("Google Map with ground overlay.")
 
-
-        /*setMapLongClick(map)
-
-        setPoiClick(map)
-
-        setMapStyle(map)*/
+        setMapStyle(map)
     }
 
+     private fun setMapStyle(map: GoogleMap) {
+         try {
+             val success = map.setMapStyle(
+                 MapStyleOptions.loadRawResourceStyle(
+                     requireContext(),
+                     R.raw.map_style_retro_almost_all_hidden
+                 )
+             )
+             if (!success) {
+                 Timber.d("Google Map style parsing error")
+             }
+         } catch (e: Resources.NotFoundException) {
+             Timber.e("Can't find google map style. Error: $e")
+         }
+     }
 
+    private fun showMeteoIcon(icon: MeteoIcon) {
+        map.addMarker(MarkerOptions() //TODO I don't check if map is ready (how ?), so what if someone calls it before it is initialized ?
+            .position(LatLng(icon.location.latitude, icon.location.longitude))
+            .icon(viewModel.bitmapDescriptorFromVector(requireContext(), icon.iconResId))
+            .title(icon.location.cityName)
+        )
+    }
+
+    private fun moveCamera(icon: MeteoIcon) {
+        map.moveCamera(
+            CameraUpdateFactory.newLatLngZoom(
+                LatLng(icon.location.latitude, icon.location.longitude),
+                MAP_MIN_ZOOM_LEVEL
+            )
+        )
+    }
 
     @SuppressLint("MissingPermission")
     private fun enableMyLocation() {
@@ -184,9 +196,6 @@ class MapFragment :
         }
     }
 
-
-
-
     private fun isLocationPermissionGranted(): Boolean {
         return PackageManager.PERMISSION_GRANTED == ContextCompat.checkSelfPermission(
             requireContext(), Manifest.permission.ACCESS_FINE_LOCATION
@@ -195,13 +204,6 @@ class MapFragment :
 
     private fun requestLocationPermission() {
         startForLocationPermissionResult.launch(Manifest.permission.ACCESS_FINE_LOCATION)
-    }
-
-
-    private fun hideKeyboard() {
-        val imm =
-            requireContext().getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-        imm.hideSoftInputFromWindow(requireView().windowToken, 0)
     }
 
     override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
@@ -241,10 +243,9 @@ class MapFragment :
         groundOverlayRotated?.isClickable = (view as CheckBox).isChecked
     }
 
-
     companion object {
         private const val MAP_MIN_ZOOM_LEVEL = 10.0f
-        private const val MAP_DEFAULT_ZOOM_LEVEL = 13.0f
+        private const val MAP_MAX_ZOOM_LEVEL = 15.0f
 
         private const val TRANSPARENCY_MAX = 100
         private val NEWARK = LatLng(40.714086, -74.228697)
