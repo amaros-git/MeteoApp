@@ -30,8 +30,7 @@ import javax.inject.Inject
 
 @AndroidEntryPoint
 class MapFragment :
-    Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener
-{
+    Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener {
     @Inject
     lateinit var viewModel: MapViewModel
 
@@ -80,6 +79,7 @@ class MapFragment :
         viewModel.showMeteoIconEvent.observe(viewLifecycleOwner) {
             Timber.d("Received meteoIcon = $it")
             showMeteoIcon(it)
+            //showMeteoIconOverlay(it)
             moveCamera(it)
         }
 
@@ -134,6 +134,9 @@ class MapFragment :
             enableLocationFeatures()
         }
 
+        //do not show Map UI elements (like Directions) when click on icon (which is marker)
+        map.uiSettings.isMapToolbarEnabled = false
+
         with(map.uiSettings) {
             isZoomControlsEnabled = true
             isCompassEnabled = true
@@ -142,12 +145,6 @@ class MapFragment :
         map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL)
         map.setMaxZoomPreference(MAP_MAX_ZOOM_LEVEL)
 
-        map.addMarker(MarkerOptions()
-            .position(NEWARK)
-            .icon(viewModel.bitmapDescriptorFromVector(requireContext(), R.drawable.ic_sunny))
-            .title("Opa")
-        )
-
         transparencyBar.setOnSeekBarChangeListener(this)
 
         map.setContentDescription("Google Map with ground overlay.")
@@ -155,28 +152,30 @@ class MapFragment :
         setMapStyle(map)
     }
 
-     private fun setMapStyle(map: GoogleMap) {
-         try {
-             val success = map.setMapStyle(
-                 MapStyleOptions.loadRawResourceStyle(
-                     requireContext(),
-                     R.raw.map_style_retro_almost_all_hidden
-                 )
-             )
-             if (!success) {
-                 Timber.d("Google Map style parsing error")
-             }
-         } catch (e: Resources.NotFoundException) {
-             Timber.e("Can't find google map style. Error: $e")
-         }
-     }
+    private fun setMapStyle(map: GoogleMap) {
+        try {
+            val success = map.setMapStyle(
+                MapStyleOptions.loadRawResourceStyle(
+                    requireContext(),
+                    R.raw.map_style_retro_almost_all_hidden
+                )
+            )
+            if (!success) {
+                Timber.d("Google Map style parsing error")
+            }
+        } catch (e: Resources.NotFoundException) {
+            Timber.e("Can't find google map style. Error: $e")
+        }
+    }
 
     private fun showMeteoIcon(icon: MeteoIcon) {
-        map.addMarker(MarkerOptions() //TODO I don't check if map is ready (how ?), so what if someone calls it before it is initialized ?
-            .position(LatLng(icon.location.latitude, icon.location.longitude))
-            .icon(viewModel.bitmapDescriptorFromVector(requireContext(), icon.iconResId))
-            .title(icon.location.cityName)
+        map.addMarker(
+            MarkerOptions() //TODO I don't check if map is ready (how ?), so what if someone calls it before it is initialized ?
+                .position(LatLng(icon.location.latitude, icon.location.longitude))
+                .icon(viewModel.getMeteoIconBitmapDescriptor(icon.iconResId))
+                .title("Mountain View Hills Top")
         )
+            .showInfoWindow()
     }
 
     private fun moveCamera(icon: MeteoIcon) {
@@ -243,16 +242,24 @@ class MapFragment :
         groundOverlayRotated?.isClickable = (view as CheckBox).isChecked
     }
 
+    private fun showMeteoIconOverlay(icon: MeteoIcon) {
+        map.setOnGroundOverlayClickListener(this)
+
+
+        groundOverlay = map.addGroundOverlay(
+            GroundOverlayOptions()
+                .image(viewModel.getMeteoIconBitmapDescriptor(icon.iconResId))
+                .anchor(0f, 1f)
+                .position(LatLng(icon.location.latitude, icon.location.longitude), 8600f, 6500f)
+        )
+    }
+
+
     companion object {
-        private const val MAP_MIN_ZOOM_LEVEL = 10.0f
-        private const val MAP_MAX_ZOOM_LEVEL = 15.0f
+        private const val MAP_MIN_ZOOM_LEVEL = 8.0f
+        private const val MAP_MAX_ZOOM_LEVEL = 10.0f
 
         private const val TRANSPARENCY_MAX = 100
-        private val NEWARK = LatLng(40.714086, -74.228697)
-        private val NEAR_NEWARK = LatLng(
-            NEWARK.latitude - 0.001,
-            NEWARK.longitude - 0.025
-        )
     }
 
 }

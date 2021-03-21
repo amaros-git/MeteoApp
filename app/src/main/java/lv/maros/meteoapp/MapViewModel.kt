@@ -5,7 +5,6 @@ import android.app.Application
 import android.content.Context
 import android.graphics.Bitmap
 import android.graphics.Canvas
-import android.location.*
 import androidx.core.content.ContextCompat
 import androidx.lifecycle.AndroidViewModel
 import androidx.lifecycle.viewModelScope
@@ -17,7 +16,6 @@ import lv.maros.meteoapp.data.cities.network.Result
 import lv.maros.meteoapp.utils.MyLocationService
 import lv.maros.meteoapp.utils.SingleLiveEvent
 import timber.log.Timber
-import java.util.*
 import javax.inject.Inject
 
 class MapViewModel @Inject constructor(
@@ -56,7 +54,7 @@ class MapViewModel @Inject constructor(
     }
 
     //TODO rework to some MeteoIconProvider class
-    fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
+    private fun bitmapDescriptorFromVector(context: Context, vectorResId: Int): BitmapDescriptor? {
         return ContextCompat.getDrawable(context, vectorResId)?.run {
             app.resources.configuration.densityDpi //TODO do I need density or I can use intrinsic values ?
             Timber.d("intrinsicWidth = $intrinsicWidth, intrinsicHeight = $intrinsicHeight")
@@ -67,6 +65,14 @@ class MapViewModel @Inject constructor(
             draw(Canvas(bitmap))
             BitmapDescriptorFactory.fromBitmap(bitmap)
         }
+    }
+
+    fun getMeteoIconBitmapDescriptor(iconResId: Int): BitmapDescriptor {
+        //create bitmap descriptor of icon. TODO if null, currently fallback to BitmapDescriptorFactory.HUE_AZURE. Change for production fallback to what ?
+        return bitmapDescriptorFromVector(app, iconResId) ?: BitmapDescriptorFactory.defaultMarker(
+            BitmapDescriptorFactory.HUE_AZURE
+        )
+
     }
 
     @SuppressLint("MissingPermission")
