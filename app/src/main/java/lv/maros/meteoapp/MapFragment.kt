@@ -2,22 +2,16 @@ package lv.maros.meteoapp
 
 import android.Manifest
 import android.annotation.SuppressLint
-import android.content.Context
 import android.content.pm.PackageManager
 import android.content.res.Resources
-import android.location.Location
 import android.os.Bundle
 import android.view.*
-import android.view.inputmethod.InputMethodManager
-import android.widget.CheckBox
-import android.widget.SeekBar
-import android.widget.SeekBar.OnSeekBarChangeListener
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import com.google.android.gms.maps.CameraUpdateFactory
 import com.google.android.gms.maps.GoogleMap
-import com.google.android.gms.maps.GoogleMap.OnGroundOverlayClickListener
+import com.google.android.gms.maps.GoogleMap.OnCameraMoveListener
 import com.google.android.gms.maps.OnMapReadyCallback
 import com.google.android.gms.maps.SupportMapFragment
 import com.google.android.gms.maps.model.*
@@ -25,17 +19,22 @@ import com.google.android.material.snackbar.Snackbar
 import dagger.hilt.android.AndroidEntryPoint
 import lv.maros.meteoapp.databinding.FragmentMapBinding
 import timber.log.Timber
-import java.util.ArrayList
 import javax.inject.Inject
+import kotlin.math.roundToInt
+import kotlin.properties.Delegates
 
 @AndroidEntryPoint
-class MapFragment : Fragment(), OnMapReadyCallback {
+class MapFragment : Fragment(), OnMapReadyCallback, OnCameraMoveListener {
     @Inject
     lateinit var viewModel: MapViewModel
 
     private lateinit var binding: FragmentMapBinding
 
     private lateinit var map: GoogleMap
+
+    private var zoomLevel by Delegates.observable(MAP_DEFAULT_ZOOM_LEVEL) { _, _, new ->
+        viewModel.processZoomLevelChange(new)
+    }
 
     //private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
@@ -122,12 +121,14 @@ class MapFragment : Fragment(), OnMapReadyCallback {
             isCompassEnabled = true
         }
 
-        map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL)
-        map.setMaxZoomPreference(MAP_MAX_ZOOM_LEVEL)
+        //map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL)
+        map.setMaxZoomPreference(MAP_MAX_ZOOM_LEVEL.toFloat())
 
         map.setContentDescription("Google Map with ground overlay.")
 
         setMapStyle(map)
+
+        map.setOnCameraMoveListener(this)
     }
 
     private fun setMapStyle(map: GoogleMap) {
@@ -160,7 +161,7 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         map.moveCamera(
             CameraUpdateFactory.newLatLngZoom(
                 LatLng(icon.location.latitude, icon.location.longitude),
-                MAP_MIN_ZOOM_LEVEL
+                MAP_DEFAULT_ZOOM_LEVEL.toFloat()
             )
         )
     }
@@ -183,11 +184,22 @@ class MapFragment : Fragment(), OnMapReadyCallback {
         startForLocationPermissionResult.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    companion object {
-        private const val MAP_MIN_ZOOM_LEVEL = 8.0f
-        private const val MAP_MAX_ZOOM_LEVEL = 10.0f
+    override fun onCameraMove() {
+        val newZoomLevel = map.cameraPosition.zoom.roundToInt()
+        //If zoom level has changed in any side
+        if (newZoomLevel != zoomLevel) {
+            zoomLevel = newZoomLevel
+            Timber.d("zoomLevel = $zoomLevel")
+        }
     }
 
+    companion object {
+        //I care only about significant zoom changes. But, for example,
+        // map.cameraPosition.zoom returns too precise zoom level. Thus I use Int
+        //and convert to Float as needed
+        private const val MAP_DEFAULT_ZOOM_LEVEL = 8
+        private const val MAP_MAX_ZOOM_LEVEL = 10
+    }
 }
 
 

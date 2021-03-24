@@ -12,7 +12,6 @@ class CitiesHttpClient : OkHttpClient() {
 
         private const val HEADER_API_KEY = BuildConfig.RAPID_KEY
         private const val HEADER_RAPID_HOST = "wft-geo-db.p.rapidapi.com"
-        private const val HEADER_USE_QUERY_STRING = true
 
         fun getClient(): OkHttpClient {
             return Builder()

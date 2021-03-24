@@ -25,8 +25,7 @@ class MapViewModel @Inject constructor(
 
     @Inject
     lateinit var myLocationManager: MyLocationService
-
-
+    
     val showMeteoIconEvent = SingleLiveEvent<MeteoIcon>()
 
     /**
@@ -73,6 +72,10 @@ class MapViewModel @Inject constructor(
             BitmapDescriptorFactory.HUE_AZURE
         )
 
+    }
+
+    fun processZoomLevelChange(newZoomLevel: Int) {
+        Timber.d("newZoomLevel = $newZoomLevel")
     }
 
     @SuppressLint("MissingPermission")

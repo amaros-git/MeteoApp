@@ -24,7 +24,7 @@ class MyLocationService @Inject constructor(
 
     private var mMyLocationListener: MyLocationListener? = null
 
-    private var meteoCurrentLocation: MeteoLocation?
+    private var meteoCurrentLocation: MeteoLocation? //TODO do I need null here ?
             by Delegates.observable(null) { _, old, new ->
                 Timber.d("old = $old, new = $new")
                 //send location to the listener if both exist
