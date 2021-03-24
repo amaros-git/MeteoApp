@@ -29,20 +29,13 @@ import java.util.ArrayList
 import javax.inject.Inject
 
 @AndroidEntryPoint
-class MapFragment :
-    Fragment(), OnMapReadyCallback, OnSeekBarChangeListener, OnGroundOverlayClickListener {
+class MapFragment : Fragment(), OnMapReadyCallback {
     @Inject
     lateinit var viewModel: MapViewModel
 
     private lateinit var binding: FragmentMapBinding
 
     private lateinit var map: GoogleMap
-    private val images: MutableList<BitmapDescriptor> = ArrayList()
-    private var groundOverlay: GroundOverlay? = null
-    private var groundOverlayRotated: GroundOverlay? = null
-    private lateinit var transparencyBar: SeekBar
-    private var currentEntry = 0
-
 
     //private val runningQOrLater = Build.VERSION.SDK_INT >= Build.VERSION_CODES.Q
 
@@ -82,19 +75,6 @@ class MapFragment :
             //showMeteoIconOverlay(it)
             moveCamera(it)
         }
-
-        transparencyBar = binding.transparencySeekBar
-        transparencyBar.max = TRANSPARENCY_MAX
-        transparencyBar.progress = 0
-
-        binding.toggleClickability.setOnClickListener {
-            toggleClickability(it)
-        }
-
-        binding.switchImage.setOnClickListener {
-            switchImage(it)
-        }
-
     }
 
     override fun onStart() {
@@ -144,8 +124,6 @@ class MapFragment :
 
         map.setMinZoomPreference(MAP_MIN_ZOOM_LEVEL)
         map.setMaxZoomPreference(MAP_MAX_ZOOM_LEVEL)
-
-        transparencyBar.setOnSeekBarChangeListener(this)
 
         map.setContentDescription("Google Map with ground overlay.")
 
@@ -205,61 +183,9 @@ class MapFragment :
         startForLocationPermissionResult.launch(Manifest.permission.ACCESS_FINE_LOCATION)
     }
 
-    override fun onProgressChanged(seekBar: SeekBar?, progress: Int, fromUser: Boolean) {
-        groundOverlay?.transparency = progress.toFloat() / TRANSPARENCY_MAX.toFloat()
-    }
-
-    override fun onStartTrackingTouch(seekBar: SeekBar?) {
-        Timber.d("onStartTrackingTouch called")
-    }
-
-    override fun onStopTrackingTouch(seekBar: SeekBar?) {
-        Timber.d("onStopTrackingTouch called")
-    }
-
-    private fun switchImage(view: View?) {
-        val overlay = groundOverlay ?: return
-        Timber.d("Here")
-        currentEntry = (currentEntry + 1) % images.size
-        overlay.setImage(images[currentEntry])
-    }
-
-    /**
-     * Toggles the visibility between 100% and 50% when a [GroundOverlay] is clicked.
-     */
-    override fun onGroundOverlayClick(groundOverlay: GroundOverlay) {
-        // Toggle transparency value between 0.0f and 0.5f. Initial default value is 0.0f.
-        val overlayRotated = groundOverlayRotated ?: return
-        overlayRotated.transparency = 0.5f - overlayRotated.transparency
-    }
-
-    /**
-     * Toggles the clickability of the smaller, rotated overlay based on the state of the View that
-     * triggered this call.
-     * This callback is defined on the CheckBox in the layout for this Activity.
-     */
-    private fun toggleClickability(view: View) {
-        groundOverlayRotated?.isClickable = (view as CheckBox).isChecked
-    }
-
-    private fun showMeteoIconOverlay(icon: MeteoIcon) {
-        map.setOnGroundOverlayClickListener(this)
-
-
-        groundOverlay = map.addGroundOverlay(
-            GroundOverlayOptions()
-                .image(viewModel.getMeteoIconBitmapDescriptor(icon.iconResId))
-                .anchor(0f, 1f)
-                .position(LatLng(icon.location.latitude, icon.location.longitude), 8600f, 6500f)
-        )
-    }
-
-
     companion object {
         private const val MAP_MIN_ZOOM_LEVEL = 8.0f
         private const val MAP_MAX_ZOOM_LEVEL = 10.0f
-
-        private const val TRANSPARENCY_MAX = 100
     }
 
 }
@@ -373,4 +299,16 @@ override fun onOptionsItemSelected(item: MenuItem) = when (item.itemId) {
         true
     }
     else -> super.onOptionsItemSelected(item)
-}*/
+}
+
+
+    /**
+     * Toggles the visibility between 100% and 50% when a [GroundOverlay] is clicked.
+     */
+    override fun onGroundOverlayClick(groundOverlay: GroundOverlay) {
+        // Toggle transparency value between 0.0f and 0.5f. Initial default value is 0.0f.
+        val overlayRotated = groundOverlayRotated ?: return
+        overlayRotated.transparency = 0.5f - overlayRotated.transparency
+    }
+
+*/
