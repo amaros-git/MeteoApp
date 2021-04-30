@@ -1,2 +1,2 @@
 # MeteoApp
-This application is in eraly developmetn stage.
+This application is in early development stage
